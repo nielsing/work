@@ -6,4 +6,6 @@
 
 <h1 align="center">Terminal Time Tracker!</h1>
 
+------
+
 Work is an incredibly simple time tracker for your terminal.
