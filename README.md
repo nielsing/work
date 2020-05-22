@@ -1,8 +1,6 @@
 <h1 align="center">
   <br>
-  <a href="https://github.com/nielsing/work"><img src="" alt="work"></a>
-  <br>
-  Photon
+  <a href="https://github.com/nielsing/work"><img src="https://raw.githubusercontent.com/nielsing/work/master/media/work.png" alt="work"></a>
   <br>
 </h1>
 
