@@ -257,7 +257,7 @@ fn get_ambiguous_year(given_date: &NaiveDate, search_type: &Search) -> NaiveDate
         (false, Search::Backward) => {
             NaiveDate::from_ymd(curr_date.year(), given_month, curr_date.day())
         }
-        (false, Search::Forward) if given_month == curr_date.month() =>  {
+        (false, Search::Forward) if given_month == curr_date.month() => {
             NaiveDate::from_ymd(curr_date.year(), given_month, curr_date.day())
         }
         (false, Search::Forward) => {
