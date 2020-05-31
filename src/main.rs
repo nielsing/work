@@ -42,10 +42,20 @@ fn run_app(args: Args) -> Result<i32, AppError> {
         SubCommand::Working => working_or_free(&mut log, true),
         SubCommand::Of {
             interval,
+            csv,
+            json,
             minutes,
             minutes_approx,
             hours_approx,
-        } => of(&mut log, &interval, minutes, minutes_approx, hours_approx),
+        } => of(
+            &mut log,
+            &interval,
+            csv,
+            json,
+            minutes,
+            minutes_approx,
+            hours_approx,
+        ),
         SubCommand::Since {
             time,
             project,
@@ -57,6 +67,10 @@ fn run_app(args: Args) -> Result<i32, AppError> {
             project,
             description,
         } => until(&mut log, &time, project, description),
-        SubCommand::While { cmd, project, description } => r#while(&mut log, &cmd, project, description),
+        SubCommand::While {
+            cmd,
+            project,
+            description,
+        } => r#while(&mut log, &cmd, project, description),
     }
 }

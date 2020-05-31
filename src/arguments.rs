@@ -30,13 +30,19 @@ pub enum SubCommand {
     Of {
         /// The interval to compare start and stop times of work with
         interval: String,
-        /// Output total number of minutes spent per project
+        /// Set output format to CSV
+        #[structopt(short, long)]
+        csv: bool,
+        /// Set output format to JSON
+        #[structopt(short, long)]
+        json: bool,
+        /// Set time format to total number of minutes
         #[structopt(long)]
         minutes: bool,
-        /// Output approximate number of minutes spent per project
+        /// Set time format to approximate number of minutes
         #[structopt(short, long)]
         minutes_approx: bool,
-        /// Output approximate number of hours spent per project
+        /// Set time format to  approximate number of hours
         #[structopt(short, long)]
         hours_approx: bool,
     },

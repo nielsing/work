@@ -3,6 +3,7 @@ use std::process::Command;
 
 use crate::error::{AppError, ErrorKind};
 use crate::log_file::*;
+use crate::project_map::ProjectMapMethods;
 use crate::time;
 
 // Helper function to simplify checks of a given Event.
@@ -134,6 +135,8 @@ pub fn working_or_free(log: &mut LogFile, check_working: bool) -> Result<i32, Ap
 pub fn of(
     log: &mut LogFile,
     interval_input: &str,
+    csv: bool,
+    json: bool,
     minutes: bool,
     minutes_approx: bool,
     hours_approx: bool,
@@ -163,9 +166,15 @@ pub fn of(
     // table option
     // Create file: output.rs that handles this.
     if let Some(map) = project_times {
-        map.iter().for_each(|(key, val)| {
-            println!("{} => {}", key.to_string(), format_time(val.values().sum()))
-        });
+        if csv {
+            println!("{}", map.as_csv());
+        } else if json {
+            println!("{}", map.as_json());
+        } else {
+            map.iter().for_each(|(key, val)| {
+                println!("{} => {}", key.to_string(), format_time(val.values().sum()))
+            });
+        }
     } else {
         println!("No work done!");
         return Ok(1);

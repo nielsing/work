@@ -3,3 +3,4 @@ pub mod error;
 pub mod log_file;
 pub mod subcommands;
 pub mod time;
+pub mod project_map;

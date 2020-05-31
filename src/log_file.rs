@@ -6,12 +6,8 @@ use std::path::PathBuf;
 use dirs;
 
 use crate::error::{AppError, ErrorKind};
+use crate::project_map::{ProjectMap, ProjectMapMethods};
 use crate::time;
-
-/// These constants are used to add clarity to the `add_to_hashmap` closure in the `tally_time`
-/// function.
-const START: usize = 0;
-const STOP: usize = 1;
 
 /// The `Event` enum describes a single event in the log. Each event in the log can either be a
 /// `start` event with or without a project description or a `stop` event with or without a project
@@ -23,7 +19,8 @@ pub enum Event {
 }
 
 impl Event {
-    fn to_project(&self) -> String {
+    // Extract project string from Event
+    pub fn to_project(&self) -> String {
         match self {
             Event::Stop(None, _) => "Unnamed project".to_string(),
             Event::Start(None, _) => "Unnamed project".to_string(),
@@ -32,7 +29,8 @@ impl Event {
         }
     }
 
-    fn to_description(&self) -> String {
+    // Extract description string from Event
+    pub fn to_description(&self) -> String {
         match self {
             Event::Stop(_, None) => "No description".to_string(),
             Event::Start(_, None) => "No description".to_string(),
@@ -186,34 +184,9 @@ impl LogFile {
     /// For example the `Start` `Start` case is just a `Start` `Stop` case with an added `Start`
     /// event in the end. Thinking of the cases in this matter makes it much simpler to sum the
     /// events.
-    pub fn tally_time(
-        &mut self,
-        interval: &time::Interval,
-    ) -> Result<Option<HashMap<String, HashMap<String, i64>>>, AppError> {
+    pub fn tally_time( &mut self, interval: &time::Interval,) -> Result<Option<ProjectMap>, AppError> {
         let events = self.filter_events(interval)?;
-        let mut projects: HashMap<String, HashMap<String, i64>> = HashMap::new();
-
-        // Closure for adding a singular event to projects hashmap
-        let mut add_event_to_hashmap = |time: &i64, event: &Event| {
-            projects
-                .entry(event.to_project())
-                .and_modify(|map| {
-                    map.entry(event.to_description())
-                        .and_modify(|x| *x += *time)
-                        .or_insert(*time);
-                })
-                .or_insert({
-                    let mut new = HashMap::new();
-                    new.insert(event.to_description(), *time);
-                    new
-                });
-        };
-
-        // Closure for adding list of  [start, .., stop] events to projects hashmap
-        let add_events_to_hashmap = |events: &[(i64, Event)]| {
-            let time = events[STOP].0 - events[START].0;
-            add_event_to_hashmap(&time, &events[START].1);
-        };
+        let mut projects: ProjectMap = HashMap::new();
 
         match &events[..] {
             // Empty list, no entries are within the given interval
@@ -221,60 +194,48 @@ impl LogFile {
             // A single stop event
             [(stop_time, event @ Event::Stop(_, _))] => {
                 let time = stop_time - interval.start;
-                projects.insert(event.to_project(), {
-                    let mut new = HashMap::new();
-                    new.insert(event.to_description(), time);
-                    new
-                });
+                projects.add_clean_event(&time, &event);
                 Ok(Some(projects))
             }
             // A single start event
             [(start_time, event @ Event::Start(_, _))] => {
                 let time = interval.end - start_time;
-                projects.insert(event.to_project(), {
-                    let mut new = HashMap::new();
-                    new.insert(event.to_description(), time);
-                    new
-                });
+                projects.add_clean_event(&time, &event);
                 Ok(Some(projects))
             }
             // Handling of [start, ..., stop] case
             [(_, Event::Start(_, _)), .., (_, Event::Stop(_, _))] => {
-                events.chunks(2).for_each(add_events_to_hashmap);
+                projects.add_events(&events);
                 Ok(Some(projects))
             }
             // Handling of [start, ..., start] case => [start, ..., stop] + [start]
             [(_, Event::Start(_, _)), .., (start_time, start_event @ Event::Start(_, _))] => {
-                events[..events.len() - 1]
-                    .chunks(2)
-                    .for_each(add_events_to_hashmap);
+                projects.add_events(&events[..events.len() - 1]);
 
                 // Add extra `start` case
                 let time = interval.end - start_time;
-                add_event_to_hashmap(&time, &start_event);
+                projects.add_event(&time, &start_event);
                 Ok(Some(projects))
             }
             // Handling of [stop, ..., stop] case => [stop] + [start, ..., stop]
             [(stop_time, stop_event @ Event::Stop(_, _)), .., (_, Event::Stop(_, _))] => {
-                events[1..].chunks(2).for_each(add_events_to_hashmap);
+                projects.add_events(&events[1..]);
 
                 // Add extra `stop` case
                 let time = stop_time - interval.start;
-                add_event_to_hashmap(&time, &stop_event);
+                projects.add_event(&time, &stop_event);
                 Ok(Some(projects))
             }
             // Handling of [stop, ..., start] case => [stop] + [start, ..., stop] + [start]
             [(stop_time, stop_event @ Event::Stop(_, _)), .., (start_time, start_event @ Event::Start(_, _))] =>
             {
-                events[1..events.len() - 1]
-                    .chunks(2)
-                    .for_each(add_events_to_hashmap);
+                projects.add_events(&events[1..events.len() - 1]);
 
                 // Add extra `stop` and `start` case.
                 let extra_stop = stop_time - interval.start;
                 let extra_start = interval.end - start_time;
-                add_event_to_hashmap(&extra_stop, stop_event);
-                add_event_to_hashmap(&extra_start, start_event);
+                projects.add_event(&extra_stop, stop_event);
+                projects.add_event(&extra_start, start_event);
                 Ok(Some(projects))
             }
         }
