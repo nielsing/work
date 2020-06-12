@@ -70,6 +70,7 @@ You can append an event to the log with the following commands:
 * `stop` for stopping the current project.
 * `since` for when you forgot to start a project some time ago.
 * `until` for when you have decided to work for the next 3 hours (as an example).
+* `between` for when you want to add a work interval. For example between 9 o'clock and 12 o'clock.
 * `while` for when you are starting a command that you want to track the time of (vim for example). 
 
 ### Reviewing past work
