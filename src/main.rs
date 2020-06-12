@@ -57,6 +57,11 @@ fn run_app(args: Args) -> Result<i32, AppError> {
             project,
             description,
         } => until(&mut log, &time, project, description),
+        SubCommand::Between {
+            time,
+            project,
+            description,
+        } => between(&mut log, &time, project, description),
         SubCommand::While {
             cmd,
             project,

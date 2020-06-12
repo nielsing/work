@@ -217,6 +217,30 @@ pub fn until(
     }
 
     let interval = time::Interval::try_parse(time, &time::Search::Forward)?;
+    log.append_event_now(&Event::Start(project.clone(), description.clone()))?;
+    log.append_event(&Event::Stop(project, description), interval.end)?;
+    Ok(0)
+}
+
+/// The `between` function corresponds to the `between` command.
+///
+/// The command makes sure that user is free. If there is no work in progress the command will
+/// append a `start` event at the specified start time with `project` name and `description` and
+/// will finish by appending a `stop` event at the specified end time.
+pub fn between(
+    log: &mut LogFile,
+    time: &str,
+    project: Option<String>,
+    description: Option<String>,
+) -> Result<i32, AppError> {
+    let event = log.get_latest_event()?;
+    if is_working(&event) {
+        return Err(AppError::new(ErrorKind::User(
+            "Please stop the current work before starting new work.".to_string(),
+        )));
+    }
+
+    let interval = time::Interval::try_parse(time, &time::Search::Backward)?;
     log.append_event(
         &Event::Start(project.clone(), description.clone()),
         interval.start,
@@ -282,7 +306,3 @@ pub fn r#while(
         }
     }
 }
-
-pub fn between() {}
-
-pub fn remove() {}

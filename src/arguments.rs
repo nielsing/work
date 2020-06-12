@@ -79,6 +79,15 @@ pub enum SubCommand {
         #[structopt(short, long)]
         description: Option<String>,
     },
+    Between {
+        /// Time interval in which work was done
+        time: String,
+        /// Name of the project
+        project: Option<String>,
+        /// Description of the given project
+        #[structopt(short, long)]
+        description: Option<String>,
+    }
 }
 
 #[derive(StructOpt, Debug)]
