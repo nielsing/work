@@ -79,6 +79,8 @@ impl ProjectMapMethods for ProjectMap {
 
     /// Returns a JSON format of the ProjectMap as a string.
     fn as_json(&self, time_format: &TimeFormat) -> String {
+        // This is incredibly dirty code, I know. I just can't be bothered with implementing a
+        // custom serde serializer right now and this works ok.
         let mut tmp_map = HashMap::new();
         for (project, descs) in self {
             let mut tmp_descs = HashMap::new();
