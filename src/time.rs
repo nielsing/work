@@ -2,6 +2,7 @@ use chrono::{Datelike, Duration, Local, NaiveDate, NaiveDateTime, NaiveTime};
 use lazy_static::*;
 use regex::Regex;
 
+use crate::arguments::TimeFormat;
 use crate::error::{AppError, ErrorKind};
 
 /// Full name for an hour unit
@@ -40,7 +41,7 @@ pub fn now() -> i64 {
 /// assert_eq!(approximate_hours(16 * 60), 0.5);
 /// assert_eq!(approximate_hours(14 * 60), 0.0);
 /// ```
-pub fn approximate_hours(duration: i64) -> f64 {
+fn approximate_hours(duration: i64) -> f64 {
     let duration = Duration::seconds(duration);
     let mut answer: f64 = duration.num_hours() as f64;
     let remainder_minutes = duration.num_minutes() - (duration.num_hours() * 60);
@@ -66,7 +67,7 @@ pub fn approximate_hours(duration: i64) -> f64 {
 /// assert_eq!(approximate_minutes(31 * 60), 45);
 /// assert_eq!(approximate_minutes(14 * 60), 15);
 /// ```
-pub fn approximate_minutes(duration: i64) -> i64 {
+fn approximate_minutes(duration: i64) -> i64 {
     let duration = Duration::seconds(duration);
     let answer = duration.num_minutes();
     let remainder_minutes = APPROX_MINUTES - (answer % APPROX_MINUTES);
@@ -128,11 +129,20 @@ fn format_human_readable(hours: i64, minutes: i64) -> String {
 /// assert_eq!(get_human_readable_form(Duration::seconds(3720).num_seconds()), "1 hour and 2 minutes");
 /// assert_eq!(get_human_readable_form(Duration::seconds(7320).num_seconds()), "2 hours and 2 minutes");
 /// ```
-pub fn get_human_readable_form(duration: i64) -> String {
+fn get_human_readable_form(duration: i64) -> String {
     let duration = Duration::seconds(duration);
     let total_hours = duration.num_hours();
     let total_minutes = duration.num_minutes() % MINUTES_IN_HOUR;
     format_human_readable(total_hours, total_minutes)
+}
+
+pub fn format_time(format: &TimeFormat, time: i64) -> String {
+    match format {
+        TimeFormat::Minutes => format!("{}", get_minutes(time)),
+        TimeFormat::MinutesApprox => format!("{}", approximate_minutes(time)),
+        TimeFormat::HoursApprox => format!("{}", approximate_hours(time)),
+        TimeFormat::HumanReadable => get_human_readable_form(time),
+    }
 }
 
 /// Returns the number of minutes in a given duration of seconds
@@ -355,7 +365,7 @@ fn parse_time_input(unit: &str, search_type: &Search) -> Result<NaiveDateTime, A
         let now = now_date_time();
         let units: Vec<&str> = unit.split(':').collect();
         let hours = i64::from_str_radix(units[0], 10).unwrap();
-        let minutes = i64::from_str_radix(&units[1][..units[1].len()], 10).unwrap();
+        let minutes = i64::from_str_radix(&units[1][..units[1].len() - 1], 10).unwrap();
         let total_minutes = hours * 60 + minutes;
 
         match search_type {

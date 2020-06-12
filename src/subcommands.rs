@@ -1,6 +1,7 @@
 use std::env;
 use std::process::Command;
 
+use crate::arguments::TimeFormat;
 use crate::error::{AppError, ErrorKind};
 use crate::log_file::*;
 use crate::project_map::ProjectMapMethods;
@@ -137,9 +138,7 @@ pub fn of(
     interval_input: &str,
     csv: bool,
     json: bool,
-    minutes: bool,
-    minutes_approx: bool,
-    hours_approx: bool,
+    time_format: TimeFormat,
 ) -> Result<i32, AppError> {
     let mut interval = time::Interval::try_parse(interval_input, &time::Search::Backward)?;
 
@@ -148,38 +147,24 @@ pub fn of(
     }
 
     let project_times = log.tally_time(&interval)?;
-    let format_time = |time| {
-        if minutes {
-            format!("{}", time::get_minutes(time))
-        } else if minutes_approx {
-            format!("{}", time::approximate_minutes(time))
-        } else if hours_approx {
-            format!("{}", time::approximate_hours(time))
-        } else {
-            time::get_human_readable_form(time)
-        }
-    };
-    // TODO: Add option for different output formats
-    // show only projects
-    // show projects and descriptions
-    // raw option
-    // table option
-    // Create file: output.rs that handles this.
     if let Some(map) = project_times {
         if csv {
-            println!("{}", map.as_csv());
+            println!("{}", map.as_csv(&time_format));
         } else if json {
-            println!("{}", map.as_json());
+            println!("{}", map.as_json(&time_format));
         } else {
             map.iter().for_each(|(key, val)| {
-                println!("{} => {}", key.to_string(), format_time(val.values().sum()))
+                println!(
+                    "{} => {}",
+                    key.to_string(),
+                    time::format_time(&time_format, val.values().sum())
+                )
             });
         }
     } else {
         println!("No work done!");
         return Ok(1);
     }
-
     Ok(0)
 }
 
@@ -297,3 +282,7 @@ pub fn r#while(
         }
     }
 }
+
+pub fn between() {}
+
+pub fn remove() {}

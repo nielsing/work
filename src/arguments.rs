@@ -1,4 +1,8 @@
+use std::str::FromStr;
+
 use structopt::StructOpt;
+
+use crate::error::{AppError, ErrorKind};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Work - Terminal Time Tracker!")]
@@ -36,15 +40,9 @@ pub enum SubCommand {
         /// Set output format to JSON
         #[structopt(short, long)]
         json: bool,
-        /// Set time format to total number of minutes
-        #[structopt(long)]
-        minutes: bool,
-        /// Set time format to approximate number of minutes
-        #[structopt(short, long)]
-        minutes_approx: bool,
-        /// Set time format to  approximate number of hours
-        #[structopt(short, long)]
-        hours_approx: bool,
+        /// Specify the time format of the output
+        #[structopt(short, long, possible_values = &["m", "minutes", "ma", "minutes-approx", "h", "hours", "hr", "human-readable"], default_value = "human-readable")]
+        time_format: TimeFormat,
     },
     /// Appends a new event to the log that started at a given time
     Since {
@@ -81,4 +79,33 @@ pub enum SubCommand {
         #[structopt(short, long)]
         description: Option<String>,
     },
+}
+
+#[derive(StructOpt, Debug)]
+pub enum TimeFormat {
+    Minutes,
+    MinutesApprox,
+    HoursApprox,
+    HumanReadable,
+}
+
+impl FromStr for TimeFormat {
+    type Err = AppError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "m" => Ok(TimeFormat::Minutes),
+            "minutes" => Ok(TimeFormat::Minutes),
+            "h" => Ok(TimeFormat::HoursApprox),
+            "hours" => Ok(TimeFormat::HoursApprox),
+            "ma" => Ok(TimeFormat::MinutesApprox),
+            "minutes-approx" => Ok(TimeFormat::MinutesApprox),
+            "hr" => Ok(TimeFormat::HumanReadable),
+            "human-readable" => Ok(TimeFormat::HumanReadable),
+            _ => Err(AppError::new(ErrorKind::User(
+                "Valid values are [m, minutes, ma, minutes-approx, h, hours, hr, human-readable]"
+                    .to_string(),
+            ))),
+        }
+    }
 }
