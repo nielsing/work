@@ -1,12 +1,9 @@
-<h1 align="center">
+<p align="center">
   <br>
   <a href="https://github.com/nielsing/work"><img src="https://raw.githubusercontent.com/nielsing/work/master/media/work.png" alt="work" width="350px"></a>
   <br>
-</h1>
-
+</p>
 <h1 align="center">Terminal Time Tracker!</h1>
-
-------
 
 ## Introduction
 Work is an incredibly simple time tracker for your terminal. Work helps you keep track of how much 
@@ -43,7 +40,7 @@ FLAGS:
 SUBCOMMANDS:
     free       Exits with an error code of 0 if no work is in progress, and 1 otherwise
     help       Prints this message or the help of the given subcommand(s)
-    of         Outputs a summary of work done within a given interval
+    of         Outputs a summary of work done within a given interval 
     since      Appends a new event to the log that started at a given time
     start      Appends a new start event to the log
     status     Prints the status of the last event in the log in human readable form
